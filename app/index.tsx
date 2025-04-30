@@ -1,6 +1,12 @@
-import { Text, View } from "react-native";
+import { Text, View, Button } from "react-native";
+// Asegúrate de que la función esté exportada desde _layout.tsx
 
 export default function Index() {
+  const handlePress = async () => {
+    // Disparar la notificación al presionar el botón
+
+  };
+
   return (
     <View
       style={{
@@ -9,6 +15,8 @@ export default function Index() {
         alignItems: "center",
       }}
     >
+     
+      
       <Text>Edit app/index.tsx to edit this screen.</Text>
     </View>
   );
