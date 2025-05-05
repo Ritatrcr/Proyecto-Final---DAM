@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/authContext/AuthContext";
 import { MaterialIcons } from "@expo/vector-icons"; 
+import Loader from "../../components/Loader"; // Asegúrate de tener un componente Loader
+import colors from "../../styles/Colors"; // Importa los colores
 
 const AuthScreen = () => {
   const router = useRouter();
@@ -22,7 +24,6 @@ const AuthScreen = () => {
   const [focusedInput, setFocusedInput] = useState(null);
   const [errorMessage, setErrorMessage] = useState<{ email?: string, password?: string, name?: string }>({});
   const [showPassword, setShowPassword] = useState(false); 
-
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,7 +68,6 @@ const AuthScreen = () => {
       } else if (userRole === "user") {
         router.push("/");
       }
-
       
     } catch (error: any) {
       Alert.alert("Error", getErrorMessage(error.code));
@@ -93,9 +93,9 @@ const AuthScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Loader />
 
-      <Text style={styles.greeting}>¡Bienvenido al ManGusteau!</Text>
-      <Text style={styles.title}>{isLogin ? "Inicia Sesión" : "Crea tu cuenta"}</Text>
+      <Text style={styles.greeting}>{isLogin ? "Inicia Sesión" : "Crea tu cuenta"}</Text>
 
       {!isLogin && (
         <>
@@ -106,7 +106,7 @@ const AuthScreen = () => {
               errorMessage.name && styles.inputError
             ]}
             placeholder="Nombre"
-            placeholderTextColor="#A1A1A1"
+            placeholderTextColor={colors.blue} // Usa el azul
             value={name}
             onChangeText={setName}
             onBlur={() => setFocusedInput(null)}
@@ -122,7 +122,7 @@ const AuthScreen = () => {
           errorMessage.email && styles.inputError
         ]}
         placeholder="Correo electrónico"
-        placeholderTextColor="#A1A1A1"
+        placeholderTextColor={colors.blue} // Usa el azul
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
@@ -139,17 +139,26 @@ const AuthScreen = () => {
             errorMessage.password && styles.inputError
           ]}
           placeholder="Contraseña"
-          placeholderTextColor="#A1A1A1"
-          secureTextEntry={!showPassword}  // Condicional para mostrar/ocultar la contraseña
+          placeholderTextColor={colors.blue} // Usa el azul
+          secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
           onBlur={() => setFocusedInput(null)}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-          <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={24} color="#A1A1A1" />
+          <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={24} color={colors.blue} />
         </TouchableOpacity>
       </View>
       {errorMessage.password && <Text style={styles.errorText}>{errorMessage.password}</Text>}
+
+      {/* Aquí agregamos el enlace "¿Olvidaste tu contraseña?" */}
+      {isLogin && (
+        <View style={styles.forgotPasswordContainer}>
+          <TouchableOpacity>
+            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <TouchableOpacity style={styles.mainButton} onPress={handleAuth}>
         <Text style={styles.mainButtonText}>{isLogin ? "Entrar" : "Registrarme"}</Text>
@@ -165,34 +174,29 @@ const AuthScreen = () => {
   );
 };
 
-
 export default AuthScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF", // fondo blanco
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 40,
-    marginTop: -80,
+    backgroundColor: colors.white, // Usa el blanco
   },
   greeting: {
     fontSize: 28,
     fontWeight: "600",
-    color: "#000000",
+    color: colors.blue, // Usa el negro
+    marginTop: 20,
     marginBottom: 20,
     textAlign: "center",
   },
   title: {
     fontSize: 18,
     fontWeight: "400",
-    color: "#666666",
-    marginBottom: 40,
+    color: colors.black, // Usa el negro
+    marginBottom: 20,
     textAlign: "center",
   },
   input: {
@@ -202,12 +206,12 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     marginBottom: 10,
-    color: "#333",
+    color: colors.blue, // Usa el negro
     borderWidth: 1,
-    borderColor: "#EAEAEA",
+    borderColor: "#EAEAEA", // Color del borde por defecto
   },
   inputFocused: {
-    borderColor: "#007AFF", // azul al enfocar
+    borderColor: colors.blue, // El borde se pone azul cuando el campo está enfocado
     borderWidth: 2,
   },
   inputError: {
@@ -221,14 +225,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mainButton: {
-    backgroundColor: "#000000", // botón negro
+    backgroundColor: colors.blue, // Usa el negro
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     width: "100%",
   },
   mainButtonText: {
-    color: "#FFFFFF",
+    color: colors.white, // Usa el blanco
     fontSize: 16,
     fontWeight: "600",
   },
@@ -236,11 +240,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   toggleText: {
-    color: "#666666",
+    color: colors.black, // Usa el negro
     fontSize: 14,
   },
   toggleTextHighlight: {
-    color: "#007AFF", // azul para el texto clickeable
+    color: colors.blue, // Usa el azul
     fontWeight: "600",
     textDecorationLine: "underline",
   },
@@ -252,5 +256,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     top: 16,
+  },
+  // Nuevo contenedor para el enlace "¿Olvidaste tu contraseña?"
+  forgotPasswordContainer: {
+    width: "100%", // Asegura que ocupe el 100% del ancho disponible
+    alignItems: "flex-start", // Alinea todo lo que esté dentro al inicio (izquierda)
+    marginBottom: 10,
+  },
+  forgotPasswordText: {
+    color: colors.blue, // Usa el azul
+    fontSize: 14,
+    marginTop: 10,
+    marginBottom: 20,
   },
 });
