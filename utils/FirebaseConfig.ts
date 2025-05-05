@@ -3,16 +3,19 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import Constants from "expo-constants";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_API_KEY,
-  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_APP_ID,
-  measurementId: import.meta.env.VITE_MEASUREMENT_ID,
+  apiKey: Constants.expoConfig?.extra?.API_KEY,
+  authDomain: Constants.expoConfig?.extra?.AUTH_DOMAIN,
+  projectId: Constants.expoConfig?.extra?.PROJECT_ID,
+  storageBucket: Constants.expoConfig?.extra?.STORAGE_BUCKET,
+  messagingSenderId: Constants.expoConfig?.extra?.MESSAGING_SENDER_ID,
+  appId: Constants.expoConfig?.extra?.APP_ID,
+  measurementId: Constants.expoConfig?.extra?.MEASUREMENT_ID,
 };
+
+
 
 const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app); 
