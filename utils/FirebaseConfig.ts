@@ -6,13 +6,13 @@ import { getStorage } from "firebase/storage";
 import Constants from "expo-constants";
 
 const firebaseConfig = {
-  apiKey: Constants.expoConfig?.extra?.API_KEY,
-  authDomain: Constants.expoConfig?.extra?.AUTH_DOMAIN,
-  projectId: Constants.expoConfig?.extra?.PROJECT_ID,
-  storageBucket: Constants.expoConfig?.extra?.STORAGE_BUCKET,
-  messagingSenderId: Constants.expoConfig?.extra?.MESSAGING_SENDER_ID,
-  appId: Constants.expoConfig?.extra?.APP_ID,
-  measurementId: Constants.expoConfig?.extra?.MEASUREMENT_ID,
+  apiKey: "AIzaSyCuzTXMl1at07F8anls2058sqyOOn8uejc",
+  authDomain: "proyecto-final-dam-85abd.firebaseapp.com",
+  projectId: "proyecto-final-dam-85abd",
+  storageBucket: "proyecto-final-dam-85abd.firebasestorage.app",
+  messagingSenderId: "582895250432",
+  appId: "1:582895250432:web:fc0d51c529cf3010fa7ce5",
+  measurementId: "G-4KYR59Y1ZP"
 };
 
 

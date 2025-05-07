@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/authContext/AuthContext";
 import { MaterialIcons } from "@expo/vector-icons"; 
+
+
 import Loader from "../../components/Loader"; // Asegúrate de tener un componente Loader
 import colors from "../../styles/Colors"; // Importa los colores
 
@@ -122,7 +124,7 @@ const AuthScreen = () => {
           errorMessage.email && styles.inputError
         ]}
         placeholder="Correo electrónico"
-        placeholderTextColor={colors.blue} // Usa el azul
+        placeholderTextColor={colors.lightGray} // Usa el azul
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
@@ -139,7 +141,7 @@ const AuthScreen = () => {
             errorMessage.password && styles.inputError
           ]}
           placeholder="Contraseña"
-          placeholderTextColor={colors.blue} // Usa el azul
+          placeholderTextColor={colors.lightGray} // Usa el azul
           secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: "600",
-    color: colors.blue, // Usa el negro
+    color: colors.black, // Usa el negro
     marginTop: 20,
     marginBottom: 20,
     textAlign: "center",
@@ -206,12 +208,12 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     marginBottom: 10,
-    color: colors.blue, // Usa el negro
+    color: colors.lightBlue, // Usa el negro
     borderWidth: 1,
     borderColor: "#EAEAEA", // Color del borde por defecto
   },
   inputFocused: {
-    borderColor: colors.blue, // El borde se pone azul cuando el campo está enfocado
+    borderColor: colors.lightBlue, // El borde se pone azul cuando el campo está enfocado
     borderWidth: 2,
   },
   inputError: {
@@ -225,7 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mainButton: {
-    backgroundColor: colors.blue, // Usa el negro
+    backgroundColor: colors.lightBlue, // Usa el negro
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
@@ -240,11 +242,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   toggleText: {
-    color: colors.black, // Usa el negro
+    color: colors.lightGray, // Usa el negro
     fontSize: 14,
   },
   toggleTextHighlight: {
-    color: colors.blue, // Usa el azul
+    color: colors.lightBlue, // Usa el azul
     fontWeight: "600",
     textDecorationLine: "underline",
   },
@@ -264,7 +266,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   forgotPasswordText: {
-    color: colors.blue, // Usa el azul
+    color: colors.lightBlue, // Usa el azul
     fontSize: 14,
     marginTop: 10,
     marginBottom: 20,
