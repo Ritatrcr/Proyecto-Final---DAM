@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Redirect } from "expo-router";
-import colors from "../styles/Colors"; // Usando los colores definidos
+import colors from "../styles/Colors"; // Asegúrate de tener un archivo de colores
+import { MaterialIcons } from "@expo/vector-icons"; // Asegúrate de tener instalado react-native-vector-icons
 
 export default function Index() {
   const [step, setStep] = useState(0);  // Para controlar las diferentes vistas
