@@ -21,6 +21,51 @@ export default {
       },
     },
     web: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
       bundler: "metro",
       output: "single",
       favicon: "./assets/images/favicon.png",
