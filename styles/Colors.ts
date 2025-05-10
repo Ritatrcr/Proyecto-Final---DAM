@@ -9,6 +9,8 @@ const colors = {
     lightGrey: '#F8F8F8',
     lightBlue: '#EAF2FF',
     lightBlue100: '#BDD3F0',
+    lightGrey100: '#D4D6DD',
+    lightGreyrows: '#8F9098',
   };
   export default colors;
   
