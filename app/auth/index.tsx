@@ -48,7 +48,7 @@ const LoginScreen = () => {
     try {
       await login(email, password);  // Usando el login del contexto
       Alert.alert("Éxito", "Usuario ingresado correctamente.");
-      router.push("/");  // Redirige a la pantalla principal tras login exitoso
+      router.push("./usuario");  // Redirige a la pantalla principal tras login exitoso
     } catch (error: any) {
       Alert.alert("Error", getErrorMessage(error.code));
     }

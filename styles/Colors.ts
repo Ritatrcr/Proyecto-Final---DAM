@@ -1,3 +1,4 @@
+import { lightBlue100 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 const colors = {
     white: '#FFFFFF',
@@ -6,7 +7,8 @@ const colors = {
     grey: '#8F9098',
     darkGrey: '#2F3036',
     lightGrey: '#F8F8F8',
-    lightBlue: '#EAF2FF'
+    lightBlue: '#EAF2FF',
+    lightBlue100: '#BDD3F0',
   };
   export default colors;
   
