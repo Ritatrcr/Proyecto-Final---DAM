@@ -14,14 +14,10 @@ export default function Tabslayout() {
           options={{
             tabBarLabel: "Home",
             tabBarIcon: ({ focused }) => (
-              <HomeIcon color={focused ? "black" : colors.grey} />
+              <HomeIcon color={focused ? colors.black : colors.grey} />
             ),
-            tabBarLabelStyle: {
-              fontSize: 14,
-              
-             
-            },
-            tabBarActiveTintColor: "black",
+           tabBarLabelStyle: styles.tabBarLabel,
+            tabBarActiveTintColor: colors.black,
             tabBarInactiveTintColor: colors.grey,
             tabBarIconStyle: styles.tabBarIconStyle,
             tabBarStyle: styles.tabBarStyle,
@@ -33,13 +29,10 @@ export default function Tabslayout() {
           options={{
             tabBarLabel: "Solicitudes",
             tabBarIcon: ({ focused }) => (
-              <ActivityIcon color={focused ? "black" : colors.grey} />
+              <ActivityIcon color={focused ? colors.black : colors.grey} />
             ),
-            tabBarLabelStyle: {
-              fontSize: 14,
-             
-            },
-            tabBarActiveTintColor: "black",
+            tabBarLabelStyle: styles.tabBarLabel,
+            tabBarActiveTintColor: colors.black,
             tabBarInactiveTintColor: colors.grey,
             tabBarIconStyle: styles.tabBarIconStyle,
             tabBarStyle: styles.tabBarStyle,
@@ -52,16 +45,9 @@ export default function Tabslayout() {
             tabBarLabel: "",
             tabBarIcon: ({ focused }) => (
               <View style={styles.iconContainer}>
-                <Text style={[styles.textStyle, { color: focused ? "black" : "white" }]}>
-                  Mi{'\n'}Viaje
-                </Text>
+                <Text style={[styles.textStyle, { color: focused ? colors.lightGrey : colors.white }]}>Mi{'\n'}Viaje</Text>
               </View>
             ),
-            tabBarLabelStyle: {
-              fontSize: 14,
-           
-            },
-        
             
             tabBarIconStyle: styles.tabBarIconStyle,
             tabBarStyle: styles.tabBarStyle,
@@ -73,13 +59,10 @@ export default function Tabslayout() {
           options={{
             tabBarLabel: "Historial",
             tabBarIcon: ({ focused }) => (
-              <HistoryIcon color={focused ? "black" : colors.grey} />
+              <HistoryIcon color={focused ? colors.black : colors.grey} />
             ),
-            tabBarLabelStyle: {
-              fontSize: 14,
-              
-            },
-            tabBarActiveTintColor: "black",
+            tabBarLabelStyle: styles.tabBarLabel,
+            tabBarActiveTintColor: colors.black,
             tabBarInactiveTintColor: colors.grey,
             tabBarIconStyle: styles.tabBarIconStyle,
             tabBarStyle: styles.tabBarStyle,
@@ -91,13 +74,10 @@ export default function Tabslayout() {
           options={{
             tabBarLabel: "Perfil",
             tabBarIcon: ({ focused }) => (
-              <UserIcon color={focused ? "black" : colors.grey} />
+              <UserIcon color={focused ? colors.black : colors.grey} />
             ),
-            tabBarLabelStyle: {
-              fontSize: 14,
-            
-            },
-            tabBarActiveTintColor: "black",
+           tabBarLabelStyle: styles.tabBarLabel,
+            tabBarActiveTintColor: colors.black,
             tabBarInactiveTintColor: colors.grey,
             tabBarIconStyle: styles.tabBarIconStyle,
             tabBarStyle: styles.tabBarStyle,
@@ -114,7 +94,7 @@ const styles = StyleSheet.create({
     height: 70, 
     borderRadius: 35,  
     backgroundColor: colors.blue, 
-    borderColor: colors.darkGrey,  
+    borderColor: colors.lightGrey100,  
     borderWidth: 2,  
     justifyContent: 'center',
     alignItems: 'center',
@@ -123,7 +103,6 @@ const styles = StyleSheet.create({
   textStyle: {
     textAlign: 'center',  
     fontSize: 16,     
-    
   },
   tabBarIconStyle: {
     fontSize: 30,          
@@ -132,5 +111,9 @@ const styles = StyleSheet.create({
     height: 80,           
     paddingTop: 10,        
     paddingBottom: 10,     
+  },
+  tabBarLabel: {
+    fontSize: 14,
+   
   },
 });

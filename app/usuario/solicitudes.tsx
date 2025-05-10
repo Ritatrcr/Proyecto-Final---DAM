@@ -1,42 +1,63 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import colors from "../../styles/Colors";  // Asegúrate de tener un archivo de colores
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
-export default function Ajustes() {
+export default function Solicitudes() {
+  const [activeTab, setActiveTab] = useState<"todos" | "aceptados" | "pendientes" | "negados">("todos");  // Estado para controlar la pestaña activa
+
+  const handleTabChange = (tab: "todos" | "aceptados" | "pendientes" | "negados") => {
+    setActiveTab(tab);
+  };
+
+  const solicitudesData = {
+    todos: [
+      { title: "Info del viaje aceptado", price: "€ 000", details: "fecha, hora de inicio, dirección, sector", period: "every year" },
+      { title: "Info del viaje aceptado", price: "€ 000", details: "fecha, hora de inicio, dirección, sector", period: "every year" },
+    ],
+    aceptados: [
+      { title: "Info del viaje aceptado", price: "€ 000", details: "fecha, hora de inicio, dirección, sector", period: "every year" },
+    ],
+    pendientes: [
+      { title: "Info del viaje aceptado", price: "€ 000", details: "fecha, hora de inicio, dirección, sector", period: "every year" },
+    ],
+    negados: [
+      { title: "Info del viaje aceptado", price: "€ 000", details: "fecha, hora de inicio, dirección, sector", period: "every year" },
+    ]
+  };
+
+  const renderSolicitudes = () => {
+    return solicitudesData[activeTab].map((solicitud, index) => (
+      <View key={index} style={styles.solicitudCard}>
+        <View style={styles.solicitudInfo}>
+          <Text style={styles.solicitudTitle}>{solicitud.title}</Text>
+          <Text style={styles.solicitudPrice}>{solicitud.price}</Text>
+          <Text style={styles.solicitudDetails}>{solicitud.details}</Text>
+          <Text style={styles.solicitudPeriod}>{solicitud.period}</Text>
+        </View>
+      </View>
+    ));
+  };
+
   return (
     <View style={styles.container}>
+      <Text style={styles.header}>Solicitudes</Text>
 
-      {/* Encabezado */}
-      <Text style={styles.header}>Ajustes</Text>
-
-      {/* Imagen de perfil */}
-      <View style={styles.profileContainer}>
-        <Image
-          source={{ uri: 'https://via.placeholder.com/150' }} // Puedes poner la URL de la imagen del perfil aquí
-          style={styles.profileImage}
-        />
-        <View style={styles.profileText}>
-          <Text style={styles.profileName}>Merchito</Text>
-          <Text style={styles.profileRole}>Conductor</Text>
-        </View>
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>✏️</Text>
-        </TouchableOpacity>
+      {/* Tabs para cambiar entre los diferentes estados */}
+      <View style={styles.tabs}>
+        {["todos", "aceptados", "pendientes", "negados"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+            onPress={() => handleTabChange(tab)}
+          >
+            <Text style={styles.tabText}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* Opciones */}
-      <TouchableOpacity style={styles.option}>
-        <Text style={styles.optionText}>Quiero ser usuario</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.option}>
-        <Text style={styles.optionText}>Editar datos de mi vehículo</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.option}>
-        <Text style={styles.optionText}>Configuración</Text>
-      </TouchableOpacity>
-
+      {/* Mostrar solicitudes según la pestaña activa */}
+      <ScrollView contentContainerStyle={styles.solicitudesList}>
+        {renderSolicitudes()}
+      </ScrollView>
     </View>
   );
 }
@@ -44,59 +65,62 @@ export default function Ajustes() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 40,
   },
   header: {
     fontSize: 28,
     fontWeight: "600",
-    color: colors.black,
-    marginBottom: 30,
+    color: "#000",
+    marginBottom: 20,
   },
-  profileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 30,
+  tabs: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
   },
-  profileImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,  // Hace que la imagen sea circular
-    backgroundColor: colors.lightBlue,
-    marginRight: 20,
-  },
-  profileText: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.black,
-  },
-  profileRole: {
-    fontSize: 14,
-    color: colors.grey,
-  },
-  editButton: {
-    backgroundColor: colors.blue,
-    borderRadius: 20,
-    padding: 10,
-  },
-  editButtonText: {
-    color: colors.white,
-    fontWeight: 'bold',
-  },
-  option: {
-    backgroundColor: colors.lightBlue,
-    paddingVertical: 15,
+  tab: {
+    paddingVertical: 10,
     paddingHorizontal: 20,
+    backgroundColor: "#EAEAEA",
+    borderRadius: 20,
+  },
+  activeTab: {
+    backgroundColor: "#007BFF", // Azul cuando está activo
+  },
+  tabText: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  solicitudCard: {
+    backgroundColor: "#F0F8FF", // Fondo azul claro para cada tarjeta
     borderRadius: 10,
     marginBottom: 15,
+    padding: 15,
   },
-  optionText: {
+  solicitudInfo: {
+    paddingBottom: 10,
+  },
+  solicitudTitle: {
     fontSize: 16,
-    color: colors.black,
-    fontWeight: '500',
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+  solicitudPrice: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  solicitudDetails: {
+    fontSize: 12,
+    marginBottom: 5,
+    color: "#007BFF", // Color azul para los detalles
+  },
+  solicitudPeriod: {
+    fontSize: 12,
+    color: "#007BFF", // Color azul para el periodo
+  },
+  solicitudesList: {
+    paddingBottom: 100,
   },
 });
