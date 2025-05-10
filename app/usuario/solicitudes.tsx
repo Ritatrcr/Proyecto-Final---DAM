@@ -42,17 +42,7 @@ export default function Solicitudes() {
       <Text style={styles.header}>Solicitudes</Text>
 
       {/* Tabs para cambiar entre los diferentes estados */}
-      <View style={styles.tabs}>
-        {["todos", "aceptados", "pendientes", "negados"].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => handleTabChange(tab)}
-          >
-            <Text style={styles.tabText}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+    
 
       {/* Mostrar solicitudes según la pestaña activa */}
       <ScrollView contentContainerStyle={styles.solicitudesList}>

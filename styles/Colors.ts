@@ -11,6 +11,7 @@ const colors = {
     lightBlue100: '#BDD3F0',
     lightGrey100: '#D4D6DD',
     lightGreyrows: '#8F9098',
+    whatsapp: '#25D366',
   };
   export default colors;
   

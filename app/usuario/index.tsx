@@ -51,12 +51,12 @@ export default function Index() {
 
 
       {/* Viajes disponibles */}
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
         <View style={styles.tripsContainer}>
           {["Viaje 1", "Viaje 2", "Viaje 3", "Viaje 4", "Viaje 4"].map((viaje, index) => (
             <View key={index} style={styles.tripCard}>
               <Image
-                source={{ uri: "https://via.placeholder.com/150" }}  // Puedes poner una imagen aquí
+      source={require("../../assets/images/carImage.png")}
                 style={styles.image}
               />
               <Text style={styles.tripName}>{viaje}</Text>
@@ -168,7 +168,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.lightGreyrows,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+    
   },
+  
   image: {
     width: "100%",
     height: 100,

@@ -1,8 +1,22 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import colors from "../../styles/Colors";  // Asegúrate de tener un archivo de colores
+import colors from "@/styles/Colors";  // Asegúrate de tener un archivo de colores
 import { ArrowRight, LogOutIcon, StarIcon } from '@/components/Icons';
+import { useRouter } from 'expo-router';
 export default function Ajustes() {
+
+    const router = useRouter(); 
+    const navigateToEdit = () => {
+    router.push('./perfil/editarPerfil');
+  };
+  const navigateTosoporte = () => {
+    router.push('./perfil/soporte');
+  };
+  const navigateTotyc = () => {
+    router.push('./perfil/terminos-y-condiciones');
+  };
+
+  
   return (
     <View style={styles.container}>
 
@@ -11,7 +25,7 @@ export default function Ajustes() {
       {/* Imagen de perfil y texto debajo */}
       <View style={styles.profileContainer}>
         <Image
-          source={require("../../assets/images/defaultUser.png")}  
+          source={require("../../../assets/images/defaultUser.png")}  
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>Merchito</Text>
@@ -31,16 +45,16 @@ export default function Ajustes() {
 
       </TouchableOpacity>
         
-      <TouchableOpacity style={styles.option}>
+      <TouchableOpacity style={styles.option} onPress={navigateToEdit}>
         <Text style={styles.optionText}>Editar perfil</Text>
         <ArrowRight color={colors.lightGreyrows} />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.option}>
+      <TouchableOpacity style={styles.option} onPress={navigateTosoporte}>
         <Text style={styles.optionText}>Soporte</Text>
         <ArrowRight color={colors.lightGreyrows} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.option}>
+      <TouchableOpacity style={styles.option} onPress={navigateTotyc}>
         <Text style={styles.optionText}>Terminos y Condiciones</Text>
              <ArrowRight color={colors.lightGreyrows} />
         
@@ -68,7 +82,7 @@ const styles = StyleSheet.create({
 
     backgroundColor: colors.white,
     paddingHorizontal: 20,
-    paddingTop: 100,
+    paddingTop: 80,
   },
   header: {
     fontSize: 28,
