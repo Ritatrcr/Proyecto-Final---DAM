@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Para la navegación
+import { useNavigation } from "@react-navigation/native";
 import colors from "../../styles/Colors"; // Ajusta la ruta según tu estructura
 import { router } from "expo-router";
 import { Searchbar } from "react-native-paper";
@@ -12,44 +12,36 @@ export default function Viajes() {
   const { userName } = useAuth();
   const { user } = useAuth();
 
-  const { obtenerTodosLosViajesDeUnaPersona, viajes } = useViajes(); // Obtener los viajes del contexto
+  const { viajes, obtenerViajesPorEstado } = useViajes(); // Obtener los viajes filtrados por estado
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Llamar a obtener los viajes cuando el componente se monta
+  // Llamar a obtener los viajes con estado "finalizado" cuando el componente se monta
   useEffect(() => {
     if (user) {
-      obtenerTodosLosViajesDeUnaPersona(); // Cargar los viajes del usuario logueado
+      obtenerViajesPorEstado("finalizado");
     }
-  }, [user, obtenerTodosLosViajesDeUnaPersona]);
+  }, [user, obtenerViajesPorEstado]);
+  
+  console.log("Viajes:", viajes);
+  
 
   const onChangeSearch = (query: React.SetStateAction<string>) => setSearchQuery(query);
 
+
   return (
     <ScrollView style={styles.container}>
-      {/* Header: Viaje en curso */}
-      <Text style={styles.greetingText}>Hola, {userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : ''}</Text>
+      {/* Barra de búsqueda */}
       <Searchbar
         placeholder="Buscar viaje..."
         value={searchQuery}
         onChangeText={onChangeSearch}
         style={styles.barraBusqueda}
       />
-      <View style={styles.buttonsContainer}></View>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Viaje en Curso</Text>
-          <Text style={styles.headerSubtitle}>fecha, hora de inicio, dirección, sector</Text>
-          <TouchableOpacity>
-            <Text style={styles.verDetalles}>Ver detalles</Text>
-          </TouchableOpacity>
-        </View>
-        <Image source={require("../../assets/images/carImage.png")} style={styles.headerImage} />
-      </View>
 
-      {/* Tus viajes */}
+      {/* Viajes finalizados */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tus viajes</Text>
+          <Text style={styles.sectionTitle}>Viajes Finalizados</Text>
           <TouchableOpacity><Text style={styles.verMas}>Ver más</Text></TouchableOpacity>
         </View>
 
@@ -68,27 +60,11 @@ export default function Viajes() {
               </View>
             ))
           ) : (
-            <Text style={styles.noViajesText}>No tienes viajes creados aún.</Text>
+            <Text style={styles.noViajesText}>No tienes viajes finalizados.</Text>
           )}
         </ScrollView>
       </View>
 
-      {/* Puntos Solicitados */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Puntos Solicitados</Text>
-        <View style={styles.puntoCard}>
-          <View style={styles.puntoImagen} />
-          <View>
-            <Text style={styles.puntoTitulo}>Merchito</Text>
-            <Text style={styles.puntoDireccion}>Colina, calle 153</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Botón "Crear Viaje" */}
-      <TouchableOpacity style={styles.createButton} onPress={() => router.push("./miViaje")}>
-        <Text style={styles.createButtonText}>Crear Viaje</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -98,53 +74,9 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: colors.white,
   },
-  greetingText: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: colors.black,
-    marginBottom: 20,
-    marginTop: 40,
-  },
   barraBusqueda: {
     marginBottom: 20,
     backgroundColor: colors.lightGrey,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  headerContainer: {
-    backgroundColor: colors.blue,
-    borderRadius: 12,
-    flexDirection: "row",
-    padding: 16,
-    marginBottom: 24,
-    alignItems: "center",
-  },
-  headerTextContainer: {
-    flex: 1
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: colors.white,
-    marginBottom: 4
-  },
-  headerSubtitle: {
-    color: colors.white,
-    fontSize: 13,
-    marginBottom: 8
-  },
-  verDetalles: {
-    color: colors.white,
-    textDecorationLine: "underline",
-    fontSize: 13
-  },
-  headerImage: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain"
   },
   section: {
     marginBottom: 30
@@ -224,40 +156,5 @@ const styles = StyleSheet.create({
     color: colors.grey,
     textAlign: "center",
     padding: 20
-  },
-  puntoCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.lightGrey,
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 10
-  },
-  puntoImagen: {
-    width: 40,
-    height: 40,
-    backgroundColor: colors.lightGrey100,
-    borderRadius: 8,
-    marginRight: 12
-  },
-  puntoTitulo: {
-    fontWeight: "bold",
-    fontSize: 15
-  },
-  puntoDireccion: {
-    fontSize: 13,
-    color: colors.grey
-  },
-  createButton: {
-    backgroundColor: colors.blue,
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: "center",
-    marginTop: 20
-  },
-  createButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold"
   }
 });

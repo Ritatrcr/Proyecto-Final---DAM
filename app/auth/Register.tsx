@@ -9,6 +9,14 @@ import {
   ScrollView, 
   Alert 
 } from "react-native";
+
+interface Car {
+  plate: string | null;
+  color: string | null;
+  brand: string | null;
+  seats: number | null;
+  photoURL: string | null;
+}
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../../styles/Colors"; // Usando los colores definidos
 import { Redirect, router } from "expo-router";
@@ -25,7 +33,6 @@ export function Register() {
   const [focusedInput, setFocusedInput] = useState<string | null>(null); // Para manejar el enfoque del input
   const [termsAccepted, setTermsAccepted] = useState(false); // Para controlar el checkbox de los términos
   const [showPassword, setShowPassword] = useState(false); // Para controlar si se ve la contraseña
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Para controlar si se ve la confirmación de la contraseña
   const [role, setRole] = useState("Usuario"); // Estado para almacenar el rol seleccionado
   const [isLoading, setIsLoading] = useState(false); // Para mostrar el loader
   const [isRedirecting, setIsRedirecting] = useState(false); // Para manejar la redirección después de 4 segundos
@@ -33,11 +40,11 @@ export function Register() {
   const [userName, setUserName] = useState(""); // Para guardar el nombre
   const [userEmail, setUserEmail] = useState(""); // Para guardar el email
   const [password, setPassword] = useState(""); // Para guardar la contraseña
-    const [plate, setPlate] = useState(""); // Para guardar la placa del carro
-    const [brand, setBrand] = useState(""); // Para guardar la marca del carro
-    const [color, setColor] = useState(""); // Para guardar el color del carro
-    const [seats, setSeats] = useState(""); // Para guardar la cantidad de asientos del carro
-    
+  const [plate, setPlate] = useState(""); // Para guardar la placa del carro
+  const [brand, setBrand] = useState(""); // Para guardar la marca del carro
+  const [color, setColor] = useState(""); // Para guardar el color del carro
+  const [seats, setSeats] = useState(""); // Para guardar la cantidad de asientos del carro
+  
   const {  signUp } = useAuth();
   
 
@@ -46,41 +53,53 @@ export function Register() {
 
   const handleNext = async () => {
     if (step === 2) {
-        try {
-          setIsLoading(true);
-      
-          // Preparar los datos del carro (si el rol es "Conductor")
-          const carData = role === "Conductor" && image ? {
-            plate: plate,
-            color: color,
-            brand: brand,
-            seats: seats,
-            photoURL: image, // Al pasar la imagen, el contexto la manejará
-          } : null;
-      
-          // Registrar el usuario (con o sin el carro dependiendo del rol)
-          await signUp(userEmail, password, userName, carData);
-      
-          setTimeout(() => {
-            setIsRedirecting(true); // Redirige después de 4 segundos
-            setIsLoading(false);
-          }, 4000);
-      
-        } catch (error) {
-          console.error("Error al registrar el usuario:", error);
-          Alert.alert("Error", "No se pudo registrar el usuario.");
+      try {
+        setIsLoading(true);
+        
+        // Asegúrate de que todos los valores estén definidos y no sean vacíos
+        console.log("Plate:", plate);
+        console.log("Color:", color);
+        console.log("Brand:", brand);
+        console.log("Seats:", seats);
+        console.log("Image:", image);
+        
+        if (!plate || !color || !brand || !seats) {
+          Alert.alert("Error", "Todos los campos son obligatorios.");
+          return;
         }
-      } else {
-        setStep(step + 1);
-        Animated.timing(progress, {
-          toValue: (step + 1) * 33,
-          duration: 500,
-          useNativeDriver: false,
-        }).start();
+        
+        // Preparamos los datos del carro
+        const carData: Car = {
+          plate: plate,
+          color: color,
+          brand: brand,
+          seats: parseInt(seats, 10),
+          photoURL: image || "",  // Si no hay imagen, asignamos una cadena vacía
+        };
+        
+        console.log("Car Data:", carData); // Verifica si carData tiene los valores correctos
+        
+        // Registrar el usuario (con o sin el carro dependiendo del rol)
+        await signUp(userEmail, password, userName, carData, role);
+        
+        setTimeout(() => {
+          setIsRedirecting(true); // Redirige después de 4 segundos
+          setIsLoading(false);
+        }, 4000);
+        
+      } catch (error) {
+        console.error("Error al registrar el usuario:", error);
+        Alert.alert("Error", "No se pudo registrar el usuario.");
       }
-      
+    } else {
+      setStep(step + 1);
+      Animated.timing(progress, {
+        toValue: (step + 1) * 33,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    }
   };
-  
   
   
 
@@ -134,9 +153,9 @@ export function Register() {
 
   if (isRedirecting) {
     if (role === "Conductor") {
-      return <Redirect href="./conductor" />;
+      return <Redirect href="/conductor" />;
     } else {
-      return <Redirect href="./usuario" />;
+      return <Redirect href="/usuario" />;
     }
   }
   
@@ -299,76 +318,82 @@ export function Register() {
             )}
 
             {/* Paso 3 - Información del carro */}
-            {step === 2 && role === "Conductor" && (
-                <View style={styles.form}>
-                    <Text style={styles.inputLabel}>Placa</Text>
-                    <TextInput
-                    style={[
-                        styles.input,
-                        focusedInput === "plate" && styles.inputFocused,
-                    ]}
-                    placeholder="ABC123"
-                    placeholderTextColor={colors.grey}
-                    onFocus={() => handleFocus("plate")}
-                    onBlur={handleBlur}
-                    value={plate}
-                    />
+            {/* Paso 3 - Información del carro */}
+{step === 2 && role === "Conductor" && (
+  <View style={styles.form}>
+    <Text style={styles.inputLabel}>Placa</Text>
+    <TextInput
+      style={[
+        styles.input,
+        focusedInput === "plate" && styles.inputFocused,
+      ]}
+      placeholder="ABC123"
+      placeholderTextColor={colors.grey}
+      onFocus={() => handleFocus("plate")}
+      onBlur={handleBlur}
+      value={plate}
+      onChangeText={setPlate} // Actualiza el estado para la placa
+    />
 
-                    <Text style={styles.inputLabel}>Marca del Carro</Text>
-                    <TextInput
-                    style={[
-                        styles.input,
-                        focusedInput === "brand" && styles.inputFocused,
-                    ]}
-                    placeholder="Toyota"
-                    placeholderTextColor={colors.grey}
-                    onFocus={() => handleFocus("brand")}
-                    onBlur={handleBlur}
-                    value={brand}
-                    />
+    <Text style={styles.inputLabel}>Marca del Carro</Text>
+    <TextInput
+      style={[
+        styles.input,
+        focusedInput === "brand" && styles.inputFocused,
+      ]}
+      placeholder="Toyota"
+      placeholderTextColor={colors.grey}
+      onFocus={() => handleFocus("brand")}
+      onBlur={handleBlur}
+      value={brand}
+      onChangeText={setBrand} // Actualiza el estado para la marca
+    />
 
-                    <Text style={styles.inputLabel}>Color del Carro</Text>
-                    <TextInput
-                    style={[
-                        styles.input,
-                        focusedInput === "color" && styles.inputFocused,
-                    ]}
-                    placeholder="Red"
-                    placeholderTextColor={colors.grey}
-                    onFocus={() => handleFocus("color")}
-                    onBlur={handleBlur}
-                    value={color}
+    <Text style={styles.inputLabel}>Color del Carro</Text>
+    <TextInput
+      style={[
+        styles.input,
+        focusedInput === "color" && styles.inputFocused,
+      ]}
+      placeholder="Red"
+      placeholderTextColor={colors.grey}
+      onFocus={() => handleFocus("color")}
+      onBlur={handleBlur}
+      value={color}
+      onChangeText={setColor} // Actualiza el estado para el color
+    />
 
-                    />
+    <Text style={styles.inputLabel}>Cantidad de Asientos Disponibles</Text>
+    <TextInput
+      style={[
+        styles.input,
+        focusedInput === "seats" && styles.inputFocused,
+      ]}
+      placeholder="4"
+      placeholderTextColor={colors.grey}
+      onFocus={() => handleFocus("seats")}
+      onBlur={handleBlur}
+      value={seats}
+      onChangeText={setSeats} // Actualiza el estado para los asientos
+      keyboardType="numeric" // Asegura que solo se ingresen números
+    />
 
-                    <Text style={styles.inputLabel}>Cantidad de Asientos Disponibles</Text>
-                    <TextInput
-                    style={[
-                        styles.input,
-                        focusedInput === "seats" && styles.inputFocused,
-                    ]}
-                    placeholder="4"
-                    placeholderTextColor={colors.grey}
-                    onFocus={() => handleFocus("seats")}
-                    onBlur={handleBlur}
-                    value={seats}
-                    />
+    <View style={styles.form}>
+      <Text style={styles.inputLabel}>Subir Foto del Vehículo</Text>
 
-                    <View style={styles.form}>
-                    <Text style={styles.inputLabel}>Subir Foto del Vehículo</Text>
+      {/* Componente de imagen para la carga de foto */}
+      <TouchableOpacity style={styles.uploadButton} onPress={handleImagePicker}>
+        <View style={styles.uploadButtonContent}>
+          <MaterialIcons name="photo-camera" size={24} color={colors.white} />
+          <Text style={styles.uploadButtonText}>Subir Foto del Vehículo</Text>
+        </View>
+      </TouchableOpacity>
 
-                    {/* Componente de imagen para la carga de foto */}
-                    <TouchableOpacity style={styles.uploadButton} onPress={handleImagePicker}>
-                        <View style={styles.uploadButtonContent}>
-                            <MaterialIcons name="photo-camera" size={24} color={colors.white} />
-                            <Text style={styles.uploadButtonText}>Subir Foto del Vehículo</Text>
-                        </View>
-                        </TouchableOpacity>
+      {image && <Image source={{ uri: image }} style={styles.selectedImage} />}
+    </View>
+  </View>
+)}
 
-                        {image && <Image source={{ uri: image }} style={styles.selectedImage} />}
-                     </View>
-                </View>
-                )}
 
 
           </ScrollView>

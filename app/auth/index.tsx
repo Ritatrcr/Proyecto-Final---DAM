@@ -15,7 +15,7 @@ import colors from "../../styles/Colors"; // Usando los colores definidos
 
 const LoginScreen = () => {
   const router = useRouter();
-  const { login } = useAuth(); // Accediendo al método login desde el contexto
+  const { login, userRole } = useAuth(); // Accediendo al método login desde el contexto
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +48,16 @@ const LoginScreen = () => {
     try {
       await login(email, password);  // Usando el login del contexto
       Alert.alert("Éxito", "Usuario ingresado correctamente.");
-      router.push("/");  // Redirige a la pantalla principal tras login exitoso
+
+      // Redirigir según el rol del usuario
+      if (userRole === 'Conductor') {
+        router.push("/conductor");  // Redirige a la pantalla del conductor
+      } else if (userRole === 'Usuario') {
+        router.push("/usuario");  // Redirige a la pantalla del usuario
+      } else {
+        router.push("/");  // Redirige a la pantalla principal si no tiene rol definido
+      }
+
     } catch (error: any) {
       Alert.alert("Error", getErrorMessage(error.code));
     }

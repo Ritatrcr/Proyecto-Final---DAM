@@ -22,7 +22,7 @@ interface AuthContextProps {
   userRole: string | null;   
   car: Car | null;  // Información del carro
   login: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string, car: Car | null) => Promise<void>;
+  signUp: (email: string, password: string, name: string, car: Car | null, role: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -83,37 +83,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signUp = async (email: string, password: string, name: string, car: Car | null) => {
+  const signUp = async (email: string, password: string, name: string, car: Car | null, role: string) => {
     try {
+      console.log("Signing up with car data:", car);  // Verifica los datos que se pasan
+  
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
-  
+      
       // Si el usuario es un conductor y tiene foto del vehículo, subimos la imagen
       let imageUrl = "";
       if (car && car.photoURL) {
         imageUrl = await uploadImage(car.photoURL, firebaseUser.uid); // Subimos la imagen del carro
       }
-
+  
       // Guardar los datos del usuario en Firestore
       await setDoc(doc(db, "users", firebaseUser.uid), {
         name: name,
         email: email,
         uid: firebaseUser.uid,
-        role: "user", // El rol puede ser "user" u "conductor"
-        car: {
-          ...car,
-          photoURL: imageUrl, // Guardamos la URL de la foto del vehículo
-        },
+        role: role, // Guardamos el rol proporcionado (Usuario o Conductor)
+        car: role === "Conductor" ? { ...car, photoURL: imageUrl } : null, // Solo guardamos el carro si es conductor
       });
-  
+      
       setUserName(name);  // Establecer el nombre después del registro
       setUserEmail(email); // Establecer el correo después del registro
-      setUserRole("user"); // Asignar el rol "user" después del registro
-  
+      setUserRole(role); // Guardamos el rol correctamente
+      setCar(role === "Conductor" ? car : null); // Si es conductor, asignamos el carro
+      
     } catch (error) {
       console.error("Error al registrar usuario:", error);
     }
   };
+  
 
   const logout = async () => {
     await signOut(auth);
@@ -125,3 +126,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
