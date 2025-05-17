@@ -1,36 +1,37 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import colors from "../../styles/Colors"; // Ajusta la ruta según tu estructura
-import { router } from "expo-router";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import colors from "../../styles/Colors";
 import { Searchbar } from "react-native-paper";
-import { useAuth } from "../../context/authContext/AuthContext"; // Asegúrate de tener el contexto de autenticación
-import { useViajes } from "../../context/viajeContext/ViajeContext"; // Contexto de viajes
+import { useAuth } from "../../context/authContext/AuthContext";
+import { useViajes } from "../../context/viajeContext/ViajeContext";
 
 export default function Viajes() {
-  const navigation = useNavigation(); // Instancia de la navegación
-  const { userName } = useAuth();
+  const navigation = useNavigation();
   const { user } = useAuth();
+  const { viajes, obtenerViajesPorEstado } = useViajes();
 
-  const { viajes, obtenerViajesPorEstado } = useViajes(); // Obtener los viajes filtrados por estado
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Llamar a obtener los viajes con estado "finalizado" cuando el componente se monta
-  useEffect(() => {
-    if (user) {
-      obtenerViajesPorEstado("finalizado");
-    }
-  }, [user, obtenerViajesPorEstado]);
-  
-  console.log("Viajes:", viajes);
-  
+  // Cada vez que el tab/pantalla está enfocada, actualizar viajes
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        obtenerViajesPorEstado("finalizado");
+      }
+    }, [user, obtenerViajesPorEstado])
+  );
 
-  const onChangeSearch = (query: React.SetStateAction<string>) => setSearchQuery(query);
-
+  const onChangeSearch = (query: string) => setSearchQuery(query);
 
   return (
     <ScrollView style={styles.container}>
-      {/* Barra de búsqueda */}
       <Searchbar
         placeholder="Buscar viaje..."
         value={searchQuery}
@@ -38,21 +39,26 @@ export default function Viajes() {
         style={styles.barraBusqueda}
       />
 
-      {/* Viajes finalizados */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Viajes Finalizados</Text>
-          <TouchableOpacity><Text style={styles.verMas}>Ver más</Text></TouchableOpacity>
+          <TouchableOpacity>
+            <Text style={styles.verMas}>Ver más</Text>
+          </TouchableOpacity>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {viajes.length > 0 ? (
             viajes.map((viaje, index) => (
               <View key={index} style={styles.viajeCard}>
-                <View style={styles.fechaTag}><Text style={styles.fechaText}>{viaje.fecha}</Text></View>
+                <View style={styles.fechaTag}>
+                  <Text style={styles.fechaText}>{viaje.fecha}</Text>
+                </View>
                 <View style={styles.cardImage} />
                 <Text style={styles.viajeCiudad}>{viaje.direccion}</Text>
-                <Text style={styles.viajeDesc}>{viaje.horaSalida}, {viaje.precio}</Text>
+                <Text style={styles.viajeDesc}>
+                  {viaje.horaSalida}, {viaje.precio}
+                </Text>
                 <Text style={styles.viajeSolicitudes}>{viaje.estado}</Text>
                 <TouchableOpacity style={styles.verInfoButton}>
                   <Text style={styles.verInfoText}>Ver info</Text>
@@ -64,7 +70,6 @@ export default function Viajes() {
           )}
         </ScrollView>
       </View>
-
     </ScrollView>
   );
 }
@@ -79,20 +84,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightGrey,
   },
   section: {
-    marginBottom: 30
+    marginBottom: 30,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   verMas: {
     color: colors.blue,
-    fontSize: 14
+    fontSize: 14,
   },
   viajeCard: {
     width: 200,
@@ -100,7 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginRight: 12,
-    position: "relative"
+    position: "relative",
   },
   fechaTag: {
     position: "absolute",
@@ -122,39 +127,39 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: colors.lightGrey100,
     borderRadius: 8,
-    marginBottom: 10
+    marginBottom: 10,
   },
   viajeCiudad: {
     fontWeight: "bold",
     fontSize: 16,
-    marginBottom: 4
+    marginBottom: 4,
   },
   viajeDesc: {
     fontSize: 12,
     color: colors.grey,
-    marginBottom: 2
+    marginBottom: 2,
   },
   viajeSolicitudes: {
     fontSize: 12,
     color: colors.grey,
-    marginBottom: 10
+    marginBottom: 10,
   },
   verInfoButton: {
     borderColor: colors.blue,
     borderWidth: 1,
     borderRadius: 20,
     alignItems: "center",
-    paddingVertical: 6
+    paddingVertical: 6,
   },
   verInfoText: {
     color: colors.blue,
     fontWeight: "bold",
-    fontSize: 13
+    fontSize: 13,
   },
   noViajesText: {
     fontSize: 16,
     color: colors.grey,
     textAlign: "center",
-    padding: 20
-  }
+    padding: 20,
+  },
 });
