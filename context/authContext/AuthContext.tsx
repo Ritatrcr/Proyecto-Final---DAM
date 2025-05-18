@@ -45,6 +45,8 @@ const uploadImage = async (uri: string, id: string) => {
     
     // Obtener la URL de descarga de la imagen
     const url = await getDownloadURL(storageRef);
+
+    console.log("URL de la imagen subida:", url);
     
     return url ?? ""; // Retornar la URL de la imagen subida
   } catch (error) {

@@ -7,7 +7,8 @@ import {
   StyleSheet, 
   Animated, 
   ScrollView, 
-  Alert 
+  Alert ,
+  Image
 } from "react-native";
 
 interface Car {

@@ -5,12 +5,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Image,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import colors from "../../styles/Colors";
 import { Searchbar } from "react-native-paper";
 import { useAuth } from "../../context/authContext/AuthContext";
 import { useViajes } from "../../context/viajeContext/ViajeContext";
+
+// IMPORTA TUS ICONOS AQUÍ (ejemplo, ajusta rutas y nombres)
+import { SortIcon, StarIcon, ArrowRight } from "../../components/Icons";
 
 export default function Viajes() {
   const navigation = useNavigation();
@@ -19,7 +23,7 @@ export default function Viajes() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Cada vez que el tab/pantalla está enfocada, actualizar viajes
+  // Recarga viajes cada vez que se enfoque el tab
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -30,131 +34,140 @@ export default function Viajes() {
 
   const onChangeSearch = (query: string) => setSearchQuery(query);
 
+  // Filtrar viajes según búsqueda (opcional)
+  const filteredViajes = viajes.filter((viaje) =>
+    viaje.direccion.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <Text style={styles.header}>Tus viajes Anteriores</Text>
+
       <Searchbar
         placeholder="Buscar viaje..."
         value={searchQuery}
         onChangeText={onChangeSearch}
-        style={styles.barraBusqueda}
+        style={styles.searchbar}
       />
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Viajes Finalizados</Text>
-          <TouchableOpacity>
-            <Text style={styles.verMas}>Ver más</Text>
-          </TouchableOpacity>
-        </View>
+      <TouchableOpacity style={styles.sort}>
+        <SortIcon color={colors.grey} />
+        <Text style={styles.buttonText}>Sort</Text>
+      </TouchableOpacity>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {viajes.length > 0 ? (
-            viajes.map((viaje, index) => (
-              <View key={index} style={styles.viajeCard}>
-                <View style={styles.fechaTag}>
-                  <Text style={styles.fechaText}>{viaje.fecha}</Text>
-                </View>
-                <View style={styles.cardImage} />
-                <Text style={styles.viajeCiudad}>{viaje.direccion}</Text>
-                <Text style={styles.viajeDesc}>
-                  {viaje.horaSalida}, {viaje.precio}
+      <ScrollView
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
+      >
+        {filteredViajes.length > 0 ? (
+          filteredViajes.map((viaje) => (
+            <View key={viaje.id} style={styles.tripCard}>
+              <Image
+                source={require("../../assets/images/carImage.png")}
+                style={styles.image}
+              />
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripDate}>{viaje.fecha}</Text>
+                <Text style={styles.tripDetails}>
+                  {viaje.direccion}
+                  {/* Si tienes campo "parada" lo agregas aquí, ejemplo: , {viaje.parada} */}
                 </Text>
-                <Text style={styles.viajeSolicitudes}>{viaje.estado}</Text>
-                <TouchableOpacity style={styles.verInfoButton}>
-                  <Text style={styles.verInfoText}>Ver info</Text>
-                </TouchableOpacity>
               </View>
-            ))
-          ) : (
-            <Text style={styles.noViajesText}>No tienes viajes finalizados.</Text>
-          )}
-        </ScrollView>
-      </View>
-    </ScrollView>
+              <View style={styles.starsContainer}>
+                <Text style={styles.tripDetails}>5</Text>
+                <StarIcon color={colors.blue} />
+              </View>
+              <ArrowRight color={colors.grey} />
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noViajesText}>No tienes viajes finalizados.</Text>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    paddingTop: 80,
+    paddingHorizontal: 20,
     backgroundColor: colors.white,
   },
-  barraBusqueda: {
+  starsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 0,
+    justifyContent: "space-between",
+    marginRight: 50,
+  },
+  sort: {
+    width: 100,
+    backgroundColor: colors.lightBlue,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 20,
+  },
+  searchbar: {
     marginBottom: 20,
     backgroundColor: colors.lightGrey,
   },
-  section: {
-    marginBottom: 30,
+  scrollContainer: {
+    paddingTop: 20,
+    paddingBottom: 100,
   },
-  sectionHeader: {
+  tripCard: {
+    backgroundColor: colors.lightBlue,
+    borderRadius: 10,
+    marginBottom: 15,
+    padding: 15,
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  verMas: {
-    color: colors.blue,
-    fontSize: 14,
-  },
-  viajeCard: {
-    width: 200,
-    backgroundColor: colors.lightGrey,
-    borderRadius: 12,
-    padding: 12,
-    marginRight: 12,
-    position: "relative",
-  },
-  fechaTag: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: colors.blue,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    zIndex: 3,
-  },
-  fechaText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: colors.white,
-  },
-  cardImage: {
-    width: "100%",
-    height: 60,
-    backgroundColor: colors.lightGrey100,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  viajeCiudad: {
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  viajeDesc: {
-    fontSize: 12,
-    color: colors.grey,
-    marginBottom: 2,
-  },
-  viajeSolicitudes: {
-    fontSize: 12,
-    color: colors.grey,
-    marginBottom: 10,
-  },
-  verInfoButton: {
-    borderColor: colors.blue,
-    borderWidth: 1,
-    borderRadius: 20,
     alignItems: "center",
-    paddingVertical: 6,
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: colors.lightGreyrows,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+    marginRight: 10,
+    marginLeft: 10,
   },
-  verInfoText: {
-    color: colors.blue,
-    fontWeight: "bold",
-    fontSize: 13,
+  image: {
+    width: 50,
+    height: 50,
+    resizeMode: "contain",
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  tripInfo: {
+    flex: 1,
+  },
+  tripDate: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+  buttonText: {
+    marginLeft: 10,
+    color: colors.black,
+    fontSize: 16,
+  },
+  tripDetails: {
+    fontSize: 14,
+    color: "#888",
+    marginRight: 10,
   },
   noViajesText: {
     fontSize: 16,

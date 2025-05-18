@@ -1,227 +1,415 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // Para la flecha hacia atrás y el icono de intercambio
-import { useAuth } from "@/context/authContext/AuthContext"; // Contexto de autenticación
-import { useViajes } from "@/context/viajeContext/ViajeContext"; // Contexto de viajes
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Modal,
+  Pressable,
+  Platform,
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/context/authContext/AuthContext";
+import { useViajes } from "@/context/viajeContext/ViajeContext";
 import colors from "@/styles/Colors";
+import { router } from "expo-router";
 
 export default function CrearViaje() {
-  const { user } = useAuth(); // Obtenemos el usuario logueado
+  const { user } = useAuth();
   const { userName } = useAuth();
-  const { agregarViaje } = useViajes(); // Obtenemos la función de agregar viaje del contexto de viajes
-  const [fecha, setFecha] = useState("");
-  const [hora, setHora] = useState("");
+  const { agregarViaje } = useViajes();
+
+  const [fecha, setFecha] = useState<Date | null>(null);
+  const [hora, setHora] = useState<Date | null>(null);
   const [precio, setPrecio] = useState("15.00");
-  const [origen, setOrigen] = useState(""); // Este será el campo editable
-  const [destino] = useState("Universidad de la Sabana"); // Este será el valor fijo
+  const [origen, setOrigen] = useState("");
+  const [destino, setDestino] = useState("Universidad de la Sabana");
 
-  // Estado para determinar si el destino es editable
   const [isDestinoEditable, setIsDestinoEditable] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // Función para manejar la navegación hacia atrás
+  // Estado para mostrar DateTimePickers
+  const [showFechaPicker, setShowFechaPicker] = useState(false);
+  const [showHoraPicker, setShowHoraPicker] = useState(false);
+
   const handleBack = () => {
-    // Aquí se puede usar la navegación que prefieras, en este caso, `navigation.goBack()`
+    router.back();
   };
 
-  // Función para intercambiar los puntos de origen y destino
   const handleSwap = () => {
-    setIsDestinoEditable(!isDestinoEditable); // Cambiar si el destino es editable o no
-    setOrigen(destino); // Cambiar el origen por el destino (o viceversa si se desea)
+    setIsDestinoEditable(!isDestinoEditable);
+    const temp = origen;
+    setOrigen(destino);
+    setDestino(temp);
   };
 
-  // Función para manejar la creación de un viaje
   const handleCreateViaje = async () => {
     if (!user) {
       console.error("Usuario no logueado");
       return;
     }
+    if (!fecha || !hora) {
+      alert("Por favor selecciona fecha y hora");
+      return;
+    }
+    const fechaStr = fecha.toLocaleDateString("es-ES", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const horaStr = hora.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
     const nuevoViaje = {
-      id: user.uid, // Usamos el UID del usuario como el ID del viaje
-      conductor: userName || "Conductor desconocido", // Nombre del conductor
-      haciaLaU: destino === "Universidad de la Sabana", // Establecemos si es hacia la U
+      id: user.uid,
+      conductor: userName || "Conductor desconocido",
+      haciaLaU: destino === "Universidad de la Sabana",
       direccion: origen,
-      horaSalida: hora,
-      fecha: fecha,
+      fecha: fechaStr,
+      horaSalida: horaStr,
       precio: precio,
-      puntos: [""], // Inicializamos con un punto pendiente
-      estado: "por iniciar", // El viaje aún no ha comenzado
+      puntos: [""],
+      estado: "por iniciar",
     };
 
-    // Llamamos a la función agregarViaje del contexto
     await agregarViaje(nuevoViaje);
-    console.log("Viaje creado con éxito");
+    setModalVisible(true);
+  };
+
+  // Manejo selector fecha
+  const onChangeFecha = (event: any, selectedDate?: Date) => {
+    setShowFechaPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setFecha(selectedDate);
+    }
+  };
+
+  // Manejo selector hora
+  const onChangeHora = (event: any, selectedTime?: Date) => {
+    setShowHoraPicker(Platform.OS === "ios");
+    if (selectedTime) {
+      setHora(selectedTime);
+    }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Flecha hacia atrás */}
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-        <Ionicons name="arrow-back" size={24} color="blue" />
+        <Ionicons name="arrow-back" size={24} color={colors.blue} />
       </TouchableOpacity>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Crea un nuevo viaje</Text>
-      </View>
+      <Text style={styles.title}>Crea un nuevo viaje</Text>
 
-      {/* Contenedor de Origen (editable) y Destino (fijo) con el ícono a la izquierda */}
-      <View style={styles.inputContainerRow}>
-        <Ionicons name="location-outline" size={24} color="black" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Colina"
-          placeholderTextColor={colors.grey}
-          value={origen}
-          onChangeText={setOrigen} // Solo origen es editable
-        />
-        {/* Botón de intercambio */}
-        <TouchableOpacity style={styles.swapButton} onPress={handleSwap}>
-          <Ionicons name="swap-vertical" size={24} color="blue" />
+      {/* Contenedor origen-destino con swap */}
+      <View style={styles.originDestContainer}>
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>Origen</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Colina"
+            placeholderTextColor={colors.grey}
+            value={origen}
+            onChangeText={setOrigen}
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.swapButton}
+          onPress={handleSwap}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="swap-vertical" size={28} color={colors.blue} />
         </TouchableOpacity>
+
+        <View style={styles.inputWrapper}>
+          <Text style={styles.label}>Destino</Text>
+          <TextInput
+            style={[styles.input, isDestinoEditable && styles.inputEditable]}
+            value={destino}
+            onChangeText={setDestino}
+            editable={isDestinoEditable}
+            selectTextOnFocus={isDestinoEditable}
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+        </View>
       </View>
 
-      <View style={styles.inputContainerRow}>
-        <Ionicons name="location-outline" size={24} color="black" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Where to?"
-          placeholderTextColor={colors.grey}
-          value={destino} // Destino es fijo
-          editable={isDestinoEditable} // Solo se puede editar cuando isDestinoEditable es true
-        />
-      </View>
-
-      {/* Fecha */}
-      <View style={styles.inputContainer}>
+      {/* Selector Fecha */}
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Fecha</Text>
-        <TextInput
+        <TouchableOpacity
           style={styles.input}
-          placeholder="Lunes 12-12-2012"
-          placeholderTextColor={colors.grey}
-          value={fecha}
-          onChangeText={setFecha}
-        />
+          onPress={() => setShowFechaPicker(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: fecha ? colors.black : colors.grey, fontSize: 16 }}>
+            {fecha
+              ? fecha.toLocaleDateString("es-ES", {
+                  weekday: "long",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "Selecciona una fecha"}
+          </Text>
+        </TouchableOpacity>
+        {showFechaPicker && (
+          <DateTimePicker
+            value={fecha || new Date()}
+            mode="date"
+            display="calendar"
+            onChange={onChangeFecha}
+            minimumDate={new Date()}
+          />
+        )}
       </View>
 
-      {/* Hora */}
-      <View style={styles.inputContainer}>
+      {/* Selector Hora */}
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Hora del viaje</Text>
-        <TextInput
+        <TouchableOpacity
           style={styles.input}
-          placeholder="Hora del viaje"
-          placeholderTextColor={colors.grey}
-          value={hora}
-          onChangeText={setHora}
-        />
+          onPress={() => setShowHoraPicker(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: hora ? colors.black : colors.grey, fontSize: 16 }}>
+            {hora
+              ? hora.toLocaleTimeString("es-ES", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+              : "Selecciona la hora"}
+          </Text>
+        </TouchableOpacity>
+        {showHoraPicker && (
+          <DateTimePicker
+            value={hora || new Date()}
+            mode="time"
+            display="spinner"
+            onChange={onChangeHora}
+            is24Hour={true}
+          />
+        )}
       </View>
 
       {/* Precio */}
-      <View style={styles.inputContainer}>
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Precio</Text>
         <View style={styles.priceButtonsContainer}>
-          {["15.00", "15.30", "15.10", "15.05"].map((price, index) => (
+          {["15.00", "15.30", "15.10", "15.05"].map((price) => (
             <TouchableOpacity
-              key={index}
+              key={price}
               style={[
                 styles.priceButton,
-                price === precio && styles.selectedPriceButton
+                precio === price && styles.priceButtonSelected,
               ]}
               onPress={() => setPrecio(price)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.priceText}>€ {price}</Text>
+              <Text
+                style={[
+                  styles.priceText,
+                  precio === price && styles.priceTextSelected,
+                ]}
+              >
+                € {price}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {/* Botón para crear viaje */}
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateViaje}>
+      {/* Botón Crear viaje */}
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={handleCreateViaje}
+        activeOpacity={0.8}
+      >
         <Text style={styles.createButtonText}>Crear Viaje</Text>
       </TouchableOpacity>
+
+      {/* Modal Confirmación */}
+      <Modal
+        transparent
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>¡Viaje creado!</Text>
+            <Text style={styles.modalMessage}>
+              Tu viaje ha sido creado con éxito.
+            </Text>
+            <Pressable
+              style={[styles.modalButton, styles.confirmButton]}
+              onPress={() => {
+                setModalVisible(false);
+                router.push("../");
+              }}
+            >
+              <Text style={styles.modalButtonText}>Ir a Inicio</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: colors.white
+    backgroundColor: colors.white,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   backButton: {
-    marginBottom: 20,
+    marginBottom: 15,
+    width: 40,
   },
-  header: {
-    marginBottom: 20
-  },
-  headerText: {
-    fontSize: 24,
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
-    color: colors.black
+    color: colors.black,
+    marginBottom: 25,
   },
-  inputContainer: {
-    marginBottom: 15
-  },
-  inputContainerRow: {
+  originDestContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    marginBottom: 25,
   },
-  icon: {
-    marginRight: 10,
+  inputWrapper: {
+    flex: 1,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.black,
-    marginBottom: 5
+    marginBottom: 8,
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
     borderColor: colors.grey,
     borderRadius: 8,
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     fontSize: 16,
-    flex: 1, // Para que ocupe el espacio restante
+    color: colors.black,
+    backgroundColor: colors.white,
+  },
+  inputEditable: {
+    borderColor: colors.blue,
+    backgroundColor: "#f0f7ff",
   },
   swapButton: {
-    marginLeft: 10,
-    borderRadius: 50,   
-    backgroundColor: colors.lightBlue,
-    padding: 10,
+    width: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 10,
   },
-  
   priceButtonsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10
   },
   priceButton: {
     borderWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    borderColor: colors.grey,
     borderRadius: 25,
-    marginBottom: 10,
-    backgroundColor: colors.lightBlue,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: colors.white,
+    marginHorizontal: 3,
   },
-  selectedPriceButton: {
+  priceButtonSelected: {
     backgroundColor: colors.blue,
+    borderColor: colors.blue,
   },
   priceText: {
     color: colors.black,
-    fontSize: 16
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  priceTextSelected: {
+    color: colors.white,
+    fontWeight: "700",
   },
   createButton: {
     backgroundColor: colors.blue,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginTop: 30,
+    alignItems: "center",
+  },
+  createButtonText: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+  },
+  modalContainer: {
+    backgroundColor: colors.white,
+    padding: 30,
     borderRadius: 12,
     alignItems: "center",
     width: "100%",
-    marginTop: 30,
+    maxWidth: 360,
   },
-  createButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold"
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.black,
+    marginBottom: 15,
   },
-});
+  modalMessage: {
+    fontSize: 16,
+    color: colors.grey,
+    textAlign: "center",
+    marginBottom: 25,
+  },
+  modalButton: {
+    backgroundColor: colors.blue,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+  },
+  modalButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  
+  confirmButton: {
+    backgroundColor: colors.blue,
 
+
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    marginTop: 20,
+
+  },
+  
+
+});
+  

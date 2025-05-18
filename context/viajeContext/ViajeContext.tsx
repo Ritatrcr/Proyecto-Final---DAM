@@ -16,6 +16,11 @@ interface Viaje {
   estado: string;
 }
 
+interface Punto {
+  direccion: string;
+  estado: string;
+}
+
 // Interfaz para el contexto de viajes
 interface ViajesContextProps {
   viajes: Viaje[];
@@ -25,12 +30,13 @@ interface ViajesContextProps {
   obtenerViajePorId: (usuarioId: string, viajeId: string) => Promise<Viaje | null>;
   obtenerTodosLosViajes: () => Promise<void>; // Método para obtener todos los viajes de todas las personas
   obtenerViajesPorEstado: (estado: string) => Promise<void>; // Obtener viajes de la persona logueada por estado
-  obtenerPuntosPendientes: () => Promise<void>; // Obtener puntos pendientes de los viajes creados por la persona
+  obtenerPuntosPorEstado: (estadoBuscado: string) => Promise<{ viajeId: string; viajeDireccion: string; punto: Punto }[]>;
   obtenerTodosLosViajesDeUnaPersona: () => Promise<void>; // Método para obtener todos los viajes de un usuario específico
 }
 
 // Crear el contexto
 const ViajesContext = createContext<ViajesContextProps>({} as ViajesContextProps);
+
 
 // Custom hook para usar el contexto
 export const useViajes = () => useContext(ViajesContext);
@@ -158,27 +164,7 @@ export const ViajesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  // Método para obtener los puntos pendientes de los viajes creados por la persona
-  const obtenerPuntosPendientes = async () => {
-    const usuarioId = obtenerUsuarioId();
-    if (!usuarioId) {
-      console.log("No hay usuario logueado");
-      return;
-    }
 
-    try {
-      const viajesQuery = query(
-        collection(db, "viajes creados", usuarioId, "viajes"),
-        where("estado", "==", "por iniciar")
-      );
-      const viajesSnapshot = await getDocs(viajesQuery);
-      const viajesData = viajesSnapshot.docs.map((doc) => doc.data() as Viaje);
-      const puntosPendientes = viajesData.flatMap((viaje) => viaje.puntos);
-      console.log("Puntos pendientes:", puntosPendientes);
-    } catch (error) {
-      console.error("Error al obtener los puntos pendientes:", error);
-    }
-  };
 
   // Método para obtener todos los viajes de un usuario específico
   const obtenerTodosLosViajesDeUnaPersona = async () => {
@@ -187,17 +173,88 @@ export const ViajesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log("No hay usuario logueado");
       return;
     }
-
+  
     try {
       const viajesSnapshot = await getDocs(collection(db, "viajes creados", usuarioId, "viajes"));
       const viajesData = viajesSnapshot.docs.map((doc) => doc.data() as Viaje);
-      console.log("Viajes del usuario:", viajesData);
-      setViajes(viajesData);
+  
+      // Ordenar viajes según el estado en el orden deseado
+      const ordenEstados = ["en curso", "por iniciar", "finalizado"];
+  
+      const viajesOrdenados = viajesData.sort((a, b) => {
+        return ordenEstados.indexOf(a.estado) - ordenEstados.indexOf(b.estado);
+      });
+  
+      setViajes(viajesOrdenados);
     } catch (error) {
       console.error("Error al obtener los viajes del usuario:", error);
     }
   };
+  
 
+
+   // Método para obtener los puntos por estado con el viaje al que pertenecen
+   const obtenerPuntosPorEstado = async (estadoBuscado: string) => {
+    const usuarioId = obtenerUsuarioId();
+    if (!usuarioId) {
+      console.log("No hay usuario logueado");
+      return [];
+    }
+  
+    try {
+      const viajesSnapshot = await getDocs(collection(db, "viajes creados", usuarioId, "viajes"));
+  
+      const viajesData = viajesSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        if (!data.puntos || !Array.isArray(data.puntos)) {
+          console.warn(`Documento ${doc.id} no tiene puntos o no es un arreglo`);
+          data.puntos = [];
+        }
+        return {
+          id: doc.id,
+          ...data,
+        } as Viaje;
+      });
+  
+      const puntosFiltrados: { viajeId: string; viajeDireccion: string; punto: Punto }[] = [];
+  
+      for (const viaje of viajesData) {
+        if (viaje.puntos && Array.isArray(viaje.puntos)) {
+          const puntosEstado = viaje.puntos
+            .map((p) => {
+              if (typeof p === "string") {
+                if (p.trim().length === 0) return null;
+                try {
+                  return JSON.parse(p) as Punto;
+                } catch {
+                  console.warn("Error al parsear punto JSON:", p);
+                  return null;
+                }
+              } else {
+                return p;
+              }
+            })
+            .filter((p: Punto | null) => p !== null && p.estado === estadoBuscado);
+  
+          puntosEstado.filter((punto): punto is Punto => punto !== null).forEach((punto: Punto) => {
+            puntosFiltrados.push({
+              viajeId: viaje.id,
+              viajeDireccion: viaje.direccion,
+              punto,
+            });
+          });
+        }
+      }
+  
+      return puntosFiltrados;
+    } catch (error) {
+      console.error("Error al obtener puntos por estado:", error);
+      return [];
+    }
+  };
+  
+
+  
   // Método para obtener un viaje por su ID
   const obtenerViajePorId = async (usuarioId: string, viajeId: string): Promise<Viaje | null> => {
     try {
@@ -225,7 +282,7 @@ export const ViajesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         obtenerViajePorId,
         obtenerTodosLosViajes,
         obtenerViajesPorEstado,
-        obtenerPuntosPendientes,
+        obtenerPuntosPorEstado,
         obtenerTodosLosViajesDeUnaPersona,
       }}
     >

@@ -6,6 +6,27 @@ import { router } from "expo-router";
 import { Searchbar } from "react-native-paper";
 import { useAuth } from "../../context/authContext/AuthContext"; // Asegúrate de tener el contexto de autenticación
 import { useViajes } from "../../context/viajeContext/ViajeContext"; // Contexto de viajes
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/utils/FirebaseConfig";
+import { cp } from "fs";
+
+interface Viaje {
+  id: string;
+  conductor: string;
+  haciaLaU: boolean;
+  direccion: string;
+  horaSalida: string;
+  fecha: string;
+  precio: string;
+  puntos: string[];
+  estado: string;
+}
+
+interface Punto {
+  direccion: string;
+  estado: string;
+}
+
 
 export default function Viajes() {
   const navigation = useNavigation(); // Instancia de la navegación
@@ -14,6 +35,16 @@ export default function Viajes() {
 
   const { obtenerTodosLosViajesDeUnaPersona, viajes } = useViajes(); // Obtener los viajes del contexto
   const [searchQuery, setSearchQuery] = useState("");
+  const { obtenerPuntosPorEstado } = useViajes();
+
+  const [viajesEnCurso, setViajesEnCurso] = useState<Viaje[]>([]);
+  const [loadingEnCurso, setLoadingEnCurso] = useState(false);
+  const onChangeSearch = (query: React.SetStateAction<string>) => setSearchQuery(query);
+  const [puntosPendientes, setPuntosPendientes] = useState<{ viajeId: string; viajeDireccion: string; punto: Punto }[]>([]);
+
+
+  
+
 
   // Llamar a obtener los viajes cuando el componente se monta
   useEffect(() => {
@@ -22,7 +53,58 @@ export default function Viajes() {
     }
   }, [user, obtenerTodosLosViajesDeUnaPersona]);
 
-  const onChangeSearch = (query: React.SetStateAction<string>) => setSearchQuery(query);
+  
+
+  useEffect(() => {
+    async function fetchPuntosPorIniciar() {
+      if (!user?.uid) return;
+  
+      try {
+        // Llamar a la función obtenerPuntosPorEstado del contexto con el estado "por iniciar"
+        const puntosConViaje = await obtenerPuntosPorEstado("pendiente");
+        // Extraer sólo los puntos para mostrar en el estado local
+        const puntosEstructurados = puntosConViaje.map(item => ({
+          viajeId: item.viajeId,
+          viajeDireccion: item.viajeDireccion,
+          punto: item.punto,
+        }));
+        setPuntosPendientes(puntosEstructurados);
+      } catch (error) {
+        console.error("Error al obtener puntos pendientes:", error);
+      }
+    }
+  
+    fetchPuntosPorIniciar();
+  }, [user, obtenerPuntosPorEstado]);
+  
+  
+  
+  
+
+  useEffect(() => {
+    async function fetchViajesEnCurso() {
+      if (!user?.uid) return;
+      setLoadingEnCurso(true);
+      try {
+        const usuarioId = user.uid;
+        const viajesQuery = query(
+          collection(db, "viajes creados", usuarioId, "viajes"),
+          where("estado", "==", "en curso")
+        );
+        const viajesSnapshot = await getDocs(viajesQuery);
+        const viajesData = viajesSnapshot.docs.map((doc) => doc.data() as Viaje);
+        setViajesEnCurso(viajesData);
+        console.log("Viajes en curso:", viajesData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingEnCurso(false);
+      }
+    }
+
+    fetchViajesEnCurso();
+  }, [user]);
+
 
   return (
     <ScrollView style={styles.container}>
@@ -34,17 +116,24 @@ export default function Viajes() {
         onChangeText={onChangeSearch}
         style={styles.barraBusqueda}
       />
-      <View style={styles.buttonsContainer}></View>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Viaje en Curso</Text>
-          <Text style={styles.headerSubtitle}>fecha, hora de inicio, dirección, sector</Text>
-          <TouchableOpacity>
-            <Text style={styles.verDetalles}>Ver detalles</Text>
-          </TouchableOpacity>
+      <View>
+      {/* Sólo mostrar card si hay algún viaje en curso */}
+      {viajesEnCurso.length > 0 && (
+        <View style={styles.headerContainer}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Viaje en Curso</Text>
+            <Text style={styles.headerSubtitle}>
+              {viajesEnCurso[0].fecha}, {viajesEnCurso[0].horaSalida}, {viajesEnCurso[0].direccion}
+            </Text>
+            <TouchableOpacity>
+              <Text style={styles.verDetalles}>Ver detalles</Text>
+            </TouchableOpacity>
+          </View>
+          <Image source={require("../../assets/images/carImage.png")} style={styles.headerImage} />
         </View>
-        <Image source={require("../../assets/images/carImage.png")} style={styles.headerImage} />
-      </View>
+      )}
+      {/* Resto de la UI */}
+    </View>
 
       {/* Tus viajes */}
       <View style={styles.section}>
@@ -75,18 +164,26 @@ export default function Viajes() {
 
       {/* Puntos Solicitados */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Puntos Solicitados</Text>
-        <View style={styles.puntoCard}>
-          <View style={styles.puntoImagen} />
-          <View>
-            <Text style={styles.puntoTitulo}>Merchito</Text>
-            <Text style={styles.puntoDireccion}>Colina, calle 153</Text>
-          </View>
+  <Text style={styles.sectionTitle}>Puntos Solicitados</Text>
+  {puntosPendientes.length === 0 ? (
+    <Text>No hay puntos pendientes.</Text>
+  ) : (
+    puntosPendientes.map(({ viajeId, viajeDireccion, punto }, index) => (
+      <View key={`${viajeId}-${index}`} style={styles.puntoCard}>
+        <View style={styles.puntoImagen} />
+        <View>
+          <Text style={styles.puntoTitulo}>Punto {index + 1} - Viaje: {viajeDireccion}</Text>
+          <Text style={styles.puntoDireccion}>{punto.direccion}</Text>
+          <Text style={styles.puntoDireccion}>Estado: {punto.estado}</Text>
         </View>
       </View>
+    ))
+  )}
+</View>
+
 
       {/* Botón "Crear Viaje" */}
-      <TouchableOpacity style={styles.createButton} onPress={() => router.push("./miViaje")}>
+      <TouchableOpacity style={styles.createButton} onPress={() => router.push("/conductor/miViaje")}>
         <Text style={styles.createButtonText}>Crear Viaje</Text>
       </TouchableOpacity>
     </ScrollView>
