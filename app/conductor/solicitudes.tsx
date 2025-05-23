@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { useAuth } from "@/context/authContext/AuthContext"; // Ejemplo de contexto donde está el user
-import { useViajes } from "@/context/viajeContext/ViajeContext"; // Contexto donde está obtenerPuntosPorEstado
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { useAuth } from "@/context/authContext/AuthContext";
+import { useViajes } from "../../context/viajeContext/ViajeConductorContext";
+import colors from "@/styles/Colors";
 
 interface Punto {
   estado: string;
@@ -9,33 +17,49 @@ interface Punto {
   hora?: string;
   direccion?: string;
   sector?: string;
-  // otros campos
+  // otros campos si tienes
+}
+
+interface Viaje {
+  id: string;
+  direccion: string;
+  fecha: string;
+  horaSalida: string;
+  // otros campos si tienes
 }
 
 interface PuntoConViaje {
-  viajeId: string;
-  viajeDireccion: string;
+  viaje: Viaje;  // aquí guardamos el viaje completo
   punto: Punto;
 }
 
 export default function Solicitudes() {
-  const [activeTab, setActiveTab] = useState<"todos" | "aceptados" | "pendientes" | "negados">("todos");
+  const [activeTab, setActiveTab] = useState<
+    "todos" | "aceptados" | "pendientes" | "negados"
+  >("todos");
   const [puntosPendientes, setPuntosPendientes] = useState<PuntoConViaje[]>([]);
   const [puntosAceptados, setPuntosAceptados] = useState<PuntoConViaje[]>([]);
   const [puntosNegados, setPuntosNegados] = useState<PuntoConViaje[]>([]);
   const [loading, setLoading] = useState(false);
 
   const { user } = useAuth();
-  const { obtenerPuntosPorEstado } = useViajes();
+  const { solicitudesDePuntos, solicitudesDePuntosPorEstado } = useViajes();
 
   // Carga pendientes
   useEffect(() => {
     async function fetchPendientes() {
       if (!user?.uid) return;
+      setLoading(true);
       try {
-        setLoading(true);
-        const data = await obtenerPuntosPorEstado("pendiente");
-        setPuntosPendientes(data);
+        // Aunque traemos puntos filtrados, necesitamos el viaje completo para mostrar datos
+        const todos = await solicitudesDePuntos();
+        const filtrados = todos.filter(({ punto }) => punto.estado === "pendiente");
+        setPuntosPendientes(
+          filtrados.map(({ viaje, punto }) => ({
+            viaje,
+            punto,
+          }))
+        );
       } catch (error) {
         console.error("Error al obtener puntos pendientes:", error);
       } finally {
@@ -43,16 +67,22 @@ export default function Solicitudes() {
       }
     }
     if (activeTab === "pendientes" || activeTab === "todos") fetchPendientes();
-  }, [user, obtenerPuntosPorEstado, activeTab]);
+  }, [user, solicitudesDePuntos, solicitudesDePuntosPorEstado, activeTab]);
 
   // Carga aceptados
   useEffect(() => {
     async function fetchAceptados() {
       if (!user?.uid) return;
+      setLoading(true);
       try {
-        setLoading(true);
-        const data = await obtenerPuntosPorEstado("aceptado");
-        setPuntosAceptados(data);
+        const todos = await solicitudesDePuntos();
+        const filtrados = todos.filter(({ punto }) => punto.estado === "aceptado");
+        setPuntosAceptados(
+          filtrados.map(({ viaje, punto }) => ({
+            viaje,
+            punto,
+          }))
+        );
       } catch (error) {
         console.error("Error al obtener puntos aceptados:", error);
       } finally {
@@ -60,16 +90,22 @@ export default function Solicitudes() {
       }
     }
     if (activeTab === "aceptados" || activeTab === "todos") fetchAceptados();
-  }, [user, obtenerPuntosPorEstado, activeTab]);
+  }, [user, solicitudesDePuntos, activeTab]);
 
   // Carga negados
   useEffect(() => {
     async function fetchNegados() {
       if (!user?.uid) return;
+      setLoading(true);
       try {
-        setLoading(true);
-        const data = await obtenerPuntosPorEstado("negado");
-        setPuntosNegados(data);
+        const todos = await solicitudesDePuntos();
+        const filtrados = todos.filter(({ punto }) => punto.estado === "negado");
+        setPuntosNegados(
+          filtrados.map(({ viaje, punto }) => ({
+            viaje,
+            punto,
+          }))
+        );
       } catch (error) {
         console.error("Error al obtener puntos negados:", error);
       } finally {
@@ -77,7 +113,7 @@ export default function Solicitudes() {
       }
     }
     if (activeTab === "negados" || activeTab === "todos") fetchNegados();
-  }, [user, obtenerPuntosPorEstado, activeTab]);
+  }, [user, solicitudesDePuntos, activeTab]);
 
   const renderSolicitudes = () => {
     let puntosMostrar: PuntoConViaje[] = [];
@@ -92,21 +128,27 @@ export default function Solicitudes() {
     }
 
     if (loading) {
-      return <ActivityIndicator size="large" color="#007BFF" style={{ marginTop: 20 }} />;
+      return (
+        <ActivityIndicator size="large" color={colors.blue} style={{ marginTop: 20 }} />
+      );
     }
 
     if (puntosMostrar.length === 0) {
-      return <Text style={{ textAlign: "center", marginTop: 20, color: "#999" }}>No hay solicitudes para mostrar</Text>;
+      return (
+        <Text style={{ textAlign: "center", marginTop: 20, color: "#999" }}>
+          No hay solicitudes para mostrar
+        </Text>
+      );
     }
 
-    return puntosMostrar.map(({ viajeId, viajeDireccion, punto }, index) => (
-      <View key={`${viajeId}-${index}`} style={styles.solicitudCard}>
+    return puntosMostrar.map(({ viaje, punto }, index) => (
+      <View key={`${viaje.id}-${index}`} style={styles.solicitudCard}>
         <View style={styles.solicitudInfo}>
-          <Text style={styles.solicitudTitle}>Viaje: {viajeDireccion || viajeId}</Text>
+          <Text style={styles.solicitudTitle}>Viaje: {viaje.direccion}</Text>
           <Text style={styles.solicitudPrice}>Estado: {punto.estado}</Text>
-          <Text style={styles.solicitudDetails}>Fecha: {punto.fecha || "N/A"}</Text>
-          <Text style={styles.solicitudDetails}>Hora: {punto.hora || "N/A"}</Text>
-          <Text style={styles.solicitudDetails}>Dirección: {punto.direccion || "N/A"}</Text>
+          <Text style={styles.solicitudDetails}>Fecha: {viaje.fecha || "N/A"}</Text>
+          <Text style={styles.solicitudDetails}>Hora: {viaje.horaSalida || "N/A"}</Text>
+          <Text style={styles.solicitudDetails}>Dirección del punto: {punto.direccion || "N/A"}</Text>
           <Text style={styles.solicitudDetails}>Sector: {punto.sector || "N/A"}</Text>
         </View>
       </View>
@@ -117,17 +159,25 @@ export default function Solicitudes() {
     <View style={styles.container}>
       <Text style={styles.header}>Solicitudes</Text>
 
-      <View style={styles.tabs}>
-        {["todos", "aceptados", "pendientes", "negados"].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab ? styles.activeTab : null]}
-            onPress={() => setActiveTab(tab as any)}
-          >
-            <Text style={styles.tabText}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ maxHeight: 55 }}
+      >
+        <View style={styles.tabs}>
+          {["todos", "aceptados", "pendientes", "negados"].map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab ? styles.activeTab : null]}
+              onPress={() => setActiveTab(tab as any)}
+            >
+              <Text style={styles.tabText}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
       <ScrollView contentContainerStyle={styles.solicitudesList}>
         {renderSolicitudes()}
@@ -159,12 +209,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#EAEAEA",
     borderRadius: 20,
+    marginHorizontal: 3,
   },
   activeTab: {
     backgroundColor: "#007BFF",
   },
   tabText: {
-    color: "#000",
+    color: colors.white,
     fontWeight: "600",
   },
   solicitudCard: {

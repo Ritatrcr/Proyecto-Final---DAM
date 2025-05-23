@@ -37,7 +37,7 @@ export function Register() {
   const [role, setRole] = useState("Usuario"); // Estado para almacenar el rol seleccionado
   const [isLoading, setIsLoading] = useState(false); // Para mostrar el loader
   const [isRedirecting, setIsRedirecting] = useState(false); // Para manejar la redirección después de 4 segundos
-  const [image, setImage] = useState(null); // Para almacenar la imagen seleccionada
+  const [image, setImage] = useState<string | null>(null); // Para almacenar la imagen seleccionada
   const [userName, setUserName] = useState(""); // Para guardar el nombre
   const [userEmail, setUserEmail] = useState(""); // Para guardar el email
   const [password, setPassword] = useState(""); // Para guardar la contraseña

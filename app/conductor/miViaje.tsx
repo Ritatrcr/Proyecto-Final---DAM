@@ -8,32 +8,25 @@ import {
   ScrollView,
   Modal,
   Pressable,
-  Platform,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/authContext/AuthContext";
-import { useViajes } from "@/context/viajeContext/ViajeContext";
+import { useViajes } from "@/context/viajeContext/ViajeConductorContext";
 import colors from "@/styles/Colors";
 import { router } from "expo-router";
 
 export default function CrearViaje() {
   const { user } = useAuth();
-  const { userName } = useAuth();
-  const { agregarViaje } = useViajes();
+  const { crearViaje } = useViajes();
 
-  const [fecha, setFecha] = useState<Date | null>(null);
-  const [hora, setHora] = useState<Date | null>(null);
+  const [fecha, setFecha] = useState("");  // ahora texto
+  const [hora, setHora] = useState("");    // ahora texto
   const [precio, setPrecio] = useState("15.00");
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("Universidad de la Sabana");
 
   const [isDestinoEditable, setIsDestinoEditable] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // Estado para mostrar DateTimePickers
-  const [showFechaPicker, setShowFechaPicker] = useState(false);
-  const [showHoraPicker, setShowHoraPicker] = useState(false);
 
   const handleBack = () => {
     router.back();
@@ -51,53 +44,39 @@ export default function CrearViaje() {
       console.error("Usuario no logueado");
       return;
     }
-    if (!fecha || !hora) {
-      alert("Por favor selecciona fecha y hora");
+    if (!fecha.trim() || !hora.trim()) {
+      alert("Por favor ingresa fecha y hora");
       return;
     }
-    const fechaStr = fecha.toLocaleDateString("es-ES", {
-      weekday: "long",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-    const horaStr = hora.toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-
+  
     const nuevoViaje = {
-      id: user.uid,
-      conductor: userName || "Conductor desconocido",
+      conductor: user.displayName || "Conductor desconocido",
       haciaLaU: destino === "Universidad de la Sabana",
       direccion: origen,
-      fecha: fechaStr,
-      horaSalida: horaStr,
+      fecha: fecha.trim(),
+      horaSalida: hora.trim(),
       precio: precio,
-      puntos: [""],
-      estado: "por iniciar",
+      estado: "por iniciar" as const,
     };
-
-    await agregarViaje(nuevoViaje);
-    setModalVisible(true);
-  };
-
-  // Manejo selector fecha
-  const onChangeFecha = (event: any, selectedDate?: Date) => {
-    setShowFechaPicker(Platform.OS === "ios");
-    if (selectedDate) {
-      setFecha(selectedDate);
+  
+    try {
+      const viajeId = await crearViaje(nuevoViaje);
+      console.log("Viaje creado con id:", viajeId);
+      setModalVisible(true);
+  
+      // Limpieza de campos
+      setFecha("");
+      setHora("");
+      setOrigen("");
+      setDestino("Universidad de la Sabana");
+      setPrecio("15.00");
+      setIsDestinoEditable(false);
+    } catch (error) {
+      console.error("Error creando viaje:", error);
+      alert("No se pudo crear el viaje, intenta nuevamente.");
     }
   };
-
-  // Manejo selector hora
-  const onChangeHora = (event: any, selectedTime?: Date) => {
-    setShowHoraPicker(Platform.OS === "ios");
-    if (selectedTime) {
-      setHora(selectedTime);
-    }
-  };
+  
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -107,7 +86,7 @@ export default function CrearViaje() {
 
       <Text style={styles.title}>Crea un nuevo viaje</Text>
 
-      {/* Contenedor origen-destino con swap */}
+      {/* Origen y Destino */}
       <View style={styles.originDestContainer}>
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>Origen</Text>
@@ -144,63 +123,32 @@ export default function CrearViaje() {
         </View>
       </View>
 
-      {/* Selector Fecha */}
+      {/* Fecha */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Fecha</Text>
-        <TouchableOpacity
+        <TextInput
           style={styles.input}
-          onPress={() => setShowFechaPicker(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={{ color: fecha ? colors.black : colors.grey, fontSize: 16 }}>
-            {fecha
-              ? fecha.toLocaleDateString("es-ES", {
-                  weekday: "long",
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
-              : "Selecciona una fecha"}
-          </Text>
-        </TouchableOpacity>
-        {showFechaPicker && (
-          <DateTimePicker
-            value={fecha || new Date()}
-            mode="date"
-            display="calendar"
-            onChange={onChangeFecha}
-            minimumDate={new Date()}
-          />
-        )}
+          placeholder="Ejemplo: 2025-05-23"
+          placeholderTextColor={colors.grey}
+          value={fecha}
+          onChangeText={setFecha}
+          keyboardType="default"
+          returnKeyType="done"
+        />
       </View>
 
-      {/* Selector Hora */}
+      {/* Hora */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Hora del viaje</Text>
-        <TouchableOpacity
+        <TextInput
           style={styles.input}
-          onPress={() => setShowHoraPicker(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={{ color: hora ? colors.black : colors.grey, fontSize: 16 }}>
-            {hora
-              ? hora.toLocaleTimeString("es-ES", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-              : "Selecciona la hora"}
-          </Text>
-        </TouchableOpacity>
-        {showHoraPicker && (
-          <DateTimePicker
-            value={hora || new Date()}
-            mode="time"
-            display="spinner"
-            onChange={onChangeHora}
-            is24Hour={true}
-          />
-        )}
+          placeholder="Ejemplo: 15:30"
+          placeholderTextColor={colors.grey}
+          value={hora}
+          onChangeText={setHora}
+          keyboardType="default"
+          returnKeyType="done"
+        />
       </View>
 
       {/* Precio */}
@@ -395,21 +343,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  
   confirmButton: {
     backgroundColor: colors.blue,
-
-
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 30,
     marginTop: 20,
-
   },
-  
+  inputGroup: {
+    marginBottom: 20,
+  },
+
 
 });
-  

@@ -11,31 +11,43 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import colors from "../../styles/Colors";
 import { Searchbar } from "react-native-paper";
 import { useAuth } from "../../context/authContext/AuthContext";
-import { useViajes } from "../../context/viajeContext/ViajeContext";
+import { useViajes } from "@/context/viajeContext/ViajeConductorContext";
 
-// IMPORTA TUS ICONOS AQUÍ (ejemplo, ajusta rutas y nombres)
+// IMPORTA TUS ICONOS AQUÍ (ajusta rutas y nombres)
 import { SortIcon, StarIcon, ArrowRight } from "../../components/Icons";
 
 export default function Viajes() {
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { viajes, obtenerViajesPorEstado } = useViajes();
+  const { viajes, viajesFiltradosPorEstado } = useViajes();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [viajesFinalizados, setViajesFinalizados] = useState<typeof viajes>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Recarga viajes cada vez que se enfoque el tab
+  // Recargar viajes finalizados cada vez que la pantalla gana foco
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        obtenerViajesPorEstado("finalizado");
+      async function fetchFinalizados() {
+        if (!user) return;
+        setLoading(true);
+        try {
+          const finalizados = await viajesFiltradosPorEstado("finalizado");
+          setViajesFinalizados(finalizados);
+        } catch (error) {
+          console.error("Error cargando viajes finalizados:", error);
+        } finally {
+          setLoading(false);
+        }
       }
-    }, [user, obtenerViajesPorEstado])
+      fetchFinalizados();
+    }, [user, viajesFiltradosPorEstado])
   );
 
   const onChangeSearch = (query: string) => setSearchQuery(query);
 
-  // Filtrar viajes según búsqueda (opcional)
-  const filteredViajes = viajes.filter((viaje) =>
+  // Filtrar por búsqueda localmente (sobre los finalizados)
+  const filteredViajes = viajesFinalizados.filter((viaje) =>
     viaje.direccion.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -59,7 +71,11 @@ export default function Viajes() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {filteredViajes.length > 0 ? (
+        {loading ? (
+          <Text style={{ textAlign: "center", marginTop: 20, color: colors.grey }}>
+            Cargando viajes...
+          </Text>
+        ) : filteredViajes.length > 0 ? (
           filteredViajes.map((viaje) => (
             <View key={viaje.id} style={styles.tripCard}>
               <Image
@@ -68,10 +84,7 @@ export default function Viajes() {
               />
               <View style={styles.tripInfo}>
                 <Text style={styles.tripDate}>{viaje.fecha}</Text>
-                <Text style={styles.tripDetails}>
-                  {viaje.direccion}
-                  {/* Si tienes campo "parada" lo agregas aquí, ejemplo: , {viaje.parada} */}
-                </Text>
+                <Text style={styles.tripDetails}>{viaje.direccion}</Text>
               </View>
               <View style={styles.starsContainer}>
                 <Text style={styles.tripDetails}>5</Text>
