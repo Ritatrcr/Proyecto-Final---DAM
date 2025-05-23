@@ -6,13 +6,17 @@ import { Stack } from "expo-router";
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ViajeProvider>  
-
+      <ViajeProvider> 
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="auth" />
           <Stack.Screen name="(app)" />
+           
+            <Stack.Screen name="conductor" />
+            <Stack.Screen name="detallesViaje" />
+
         </Stack>
-      </ViajeProvider>
+        </ViajeProvider>
+
     </AuthProvider>
   );
 }
