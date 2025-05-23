@@ -55,7 +55,7 @@ const LoginScreen = () => {
       } else if (userRole === 'Usuario') {
         router.push("/usuario");  // Redirige a la pantalla del usuario
       } else {
-        router.push("/");  // Redirige a la pantalla principal si no tiene rol definido
+        router.push("/usuario");  // Redirige a la pantalla principal si no tiene rol definido
       }
 
     } catch (error: any) {
